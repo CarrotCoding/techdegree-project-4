@@ -1,6 +1,7 @@
 from model import (Base, session, Product, engine)
 import datetime
 import csv
+import time
 
 
 def menu():
@@ -44,7 +45,7 @@ def clean_price(price_str):
     try:
         split_price = price_str.split('$')
         price_float = float(split_price[1])
-    except ValueError:
+    except (ValueError, IndexError):
         input('''
             \n***** PRICE ERROR *****
             \rThe price should be a number with a currency symbol
@@ -60,8 +61,33 @@ def view_product():
 
 
 def add_product():
-    pass
-
+    product_name = input('What is the product name? ')
+    price_error = True
+    while price_error:
+        product_price = input('How much is the product (Ex $4.99)? ')
+        product_price = clean_price(product_price)
+        if type(product_price) == int:
+            price_error = False
+    quantity_error = True
+    while quantity_error:
+        product_quantity = input('How many are there in stock? ')
+        try:
+            int(product_quantity)
+        except ValueError:
+            input('''
+                \n***** QUANTITY ERROR *****
+                \rThe quantity should be a whole number
+                \rEx: 83
+                \rPress enter to try again
+                \r***********************''')
+        quantity_error = False
+    now = datetime.datetime.now()
+    date_updated = clean_date(now.strftime("%m/%d/%Y"))
+    new_product = Product(product_name=product_name, product_price=product_price, product_quantity=product_quantity, date_updated=date_updated)
+    session.add(new_product)
+    session.commit()
+    print('Product added!')
+    time.sleep(1.5)
 
 def backup_database():
     backup_choice = input('''
@@ -111,7 +137,6 @@ def app():
             # view product details
             view_product()
         elif choice == 'A':
-            # add product
             add_product()
         elif choice == 'B':
             backup_database()
