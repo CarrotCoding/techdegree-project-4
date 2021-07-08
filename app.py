@@ -9,14 +9,15 @@ def menu():
             \nPRODUCTS INVENTORY
             \rV) View Product
             \rA) Add Product
-            \rB) Backup''')
-        choice = input("What would you like to do?\n")
-        if choice.upper() in ['V', 'A', 'B']:
+            \rB) Backup
+            \rQ) Quit''')
+        choice = input("What would you like to do?\n").upper()
+        if choice in ['V', 'A', 'B', 'Q']:
             return choice
         else:
             input('''
                     \rPlease choose one of the options above.
-                    \rV, A or B
+                    \rV, A, B or Q
                     \rPress enter to try again.''')
 
 
@@ -54,6 +55,34 @@ def clean_price(price_str):
         return int(price_float * 100)
 
 
+def view_product():
+    pass
+
+
+def add_product():
+    pass
+
+
+def backup_database():
+    backup_choice = input('''
+        \n***** WARNING *****
+        \rYou are about to make a backup of the database
+        \rAre you sure you wish to proceed? ('Y' or 'N')\n''').upper()
+    if backup_choice == 'Y':
+        now = datetime.datetime.now()
+        # I've added the now_timestamp as this felt like a good idea
+        # for a production environment. After all, you want to know
+        # when the backup was created.
+        file = open(f"backup_database_{now}.csv", "a")
+        file.write('product_name,product_price,product_quantity,date_updated\n')
+        for product in session.query(Product):
+            file.write(f'{product}\n')
+        file.close()
+        print('\n*** BACKUP CREATED ***')
+    else:
+        return
+
+
 def add_csv():
     with open('inventory.csv') as csvfile:
         data = csv.reader(csvfile)
@@ -71,7 +100,6 @@ def add_csv():
                 date_updated = clean_date(row[3])
                 new_product = Product(product_name=product_name, product_price=product_price, product_quantity=product_quantity, date_updated=date_updated)
                 session.add(new_product)
-            #print(row)
         session.commit()
 
 
@@ -81,13 +109,16 @@ def app():
         choice = menu()
         if choice == 'V':
             # view product details
-            pass
+            view_product()
         elif choice == 'A':
             # add product
-            pass
+            add_product()
+        elif choice == 'B':
+            backup_database()
         else:
-            # backup database
-            pass
+            print('GOODBYE')
+            app_running = False
+            return
 
 
 
