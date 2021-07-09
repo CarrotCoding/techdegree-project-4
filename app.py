@@ -24,21 +24,11 @@ def menu():
 
 def clean_date(date_str):
     split_date = date_str.split('/')
-    try:
-        month = int(split_date[0])
-        day = int(split_date[1])
-        year = int(split_date[2])
-        return_date = datetime.date(year, month, day)
-    except ValueError:
-        input('''
-            \n***** DATE ERROR *****
-            \rThe date format shout include a valid Month Date, from the past
-            \rEx: 11/1/2018
-            \rPress enter to try again
-            \r**********************''')
-        return
-    else:
-        return return_date
+    month = int(split_date[0])
+    day = int(split_date[1])
+    year = int(split_date[2])
+    return_date = datetime.date(year, month, day)
+    return return_date
 
 
 def clean_price(price_str):
@@ -184,7 +174,7 @@ def add_csv():
                 new_product = Product(
                     product_name=product_name,
                     product_price=product_price,
-                    product_quantity=product_quantity, 
+                    product_quantity=product_quantity,
                     date_updated=date_updated)
                 session.add(new_product)
         session.commit()
