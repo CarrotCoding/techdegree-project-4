@@ -110,7 +110,8 @@ def add_product():
                 \rEx: 83
                 \rPress enter to try again
                 \r***********************''')
-        quantity_error = False
+        else:
+            quantity_error = False
     now = datetime.datetime.now()
     date_updated = clean_date(now.strftime("%m/%d/%Y"))
     new_product = Product(product_name=product_name,
@@ -120,8 +121,9 @@ def add_product():
     # code to check whether product already exists
     # if it exists it updates that entry with the new price, quantity and
     # date updated
-    if session.query(Product).filter(
-        Product.product_name==new_product.product_name):
+    product_in_db = session.query(Product).filter(
+        Product.product_name==new_product.product_name).one_or_none()
+    if product_in_db != None:
             session.query(Product).filter(
                 Product.product_name==new_product.product_name).update({
                 Product.product_price: new_product.product_price,
@@ -141,7 +143,7 @@ def backup_database():
         \rYou are about to make a backup of the database
         \rAre you sure you wish to proceed? ('Y' or 'N')\n''').upper()
     if backup_choice == 'Y':
-        now = datetime.datetime.now()
+        now = datetime.datetime.now().date()
         # I've added the now_timestamp as this felt like a good idea
         # for a production environment. After all, you want to know
         # when the backup was created.
