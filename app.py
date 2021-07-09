@@ -56,8 +56,48 @@ def clean_price(price_str):
         return int(price_float * 100)
 
 
+def clean_id(id_str, options):
+    try:
+        product_id = int(id_str)
+    except ValueError:
+        input('''
+            \n***** ID ERROR *****
+            \rThe ID should be a number.
+            \rPress enter to try again.
+            \r********************''')
+        return
+    else:
+        if product_id in options:
+            return product_id
+        else:
+            input(f'''
+                \n***** ID ERROR *****
+                \rOptions: {options}
+                \rPress enter to try again.
+                \r********************''')
+            return
+
+
 def view_product():
-    pass
+    product_id_options = []
+    for product in session.query(Product):
+        product_id_options.append(product.product_id)
+    product_id_error = True
+    while product_id_error:
+        product_id_choice = input(f'''
+            \nProduct ID options: {product_id_options}
+            \nProduct ID: ''')
+        product_id_choice = clean_id(product_id_choice, product_id_options)
+        if type(product_id_choice) == int:
+            product_id_error = False
+    the_product = session.query(Product).filter(
+        Product.product_id==product_id_choice).first()
+    print(f'''
+        \nProduct Name = {the_product.product_name},
+        \rProduct Price = ${the_product.product_price/100},
+        \rQuantity = {the_product.product_quantity},
+        \rLast Updated = {the_product.date_updated.strftime("%m/%d/%Y")}''')
+    time.sleep(1.5)
 
 
 def add_product():
@@ -83,11 +123,27 @@ def add_product():
         quantity_error = False
     now = datetime.datetime.now()
     date_updated = clean_date(now.strftime("%m/%d/%Y"))
-    new_product = Product(product_name=product_name, product_price=product_price, product_quantity=product_quantity, date_updated=date_updated)
-    session.add(new_product)
+    new_product = Product(product_name=product_name,
+        product_price=product_price,
+        product_quantity=product_quantity,
+        date_updated=date_updated)
+    # code to check whether product already exists
+    # if it exists it updates that entry with the new price, quantity and
+    # date updated
+    if session.query(Product).filter(
+        Product.product_name==new_product.product_name):
+            session.query(Product).filter(
+                Product.product_name==new_product.product_name).update({
+                Product.product_price: new_product.product_price,
+                Product.product_quantity: new_product.product_quantity,
+                Product.date_updated: new_product.date_updated
+            })
+    else:
+        session.add(new_product)
     session.commit()
-    print('Product added!')
+    print('Product added or updated!')
     time.sleep(1.5)
+
 
 def backup_database():
     backup_choice = input('''
@@ -118,13 +174,18 @@ def add_csv():
         for row in data:
             # here we check if the product is already in the db
             # returns one if there is one or none if there is none
-            product_in_db = session.query(Product).filter(Product.product_name==row[0]).one_or_none()
+            product_in_db = session.query(Product).filter(
+                Product.product_name==row[0]).one_or_none()
             if product_in_db == None:
                 product_name = row[0]
                 product_price = clean_price(row[1])
                 product_quantity = int(row[2])
                 date_updated = clean_date(row[3])
-                new_product = Product(product_name=product_name, product_price=product_price, product_quantity=product_quantity, date_updated=date_updated)
+                new_product = Product(
+                    product_name=product_name,
+                    product_price=product_price,
+                    product_quantity=product_quantity, 
+                    date_updated=date_updated)
                 session.add(new_product)
         session.commit()
 
@@ -134,7 +195,6 @@ def app():
     while app_running:
         choice = menu()
         if choice == 'V':
-            # view product details
             view_product()
         elif choice == 'A':
             add_product()
@@ -144,7 +204,6 @@ def app():
             print('GOODBYE')
             app_running = False
             return
-
 
 
 if __name__ == '__main__':
